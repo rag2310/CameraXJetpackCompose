@@ -65,7 +65,9 @@ dependencies {
 
     // CAMERA X
     implementation "androidx.camera:camera-core:${camerax_version}"
+    implementation "androidx.camera:camera-camera2:$camerax_version"
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
+    implementation "androidx.camera:camera-view:${camerax_version}"
 
     // HILT -------------------------------------
     implementation "com.google.dagger:hilt-android:$hilt_version"
