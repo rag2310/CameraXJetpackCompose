@@ -4,40 +4,66 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.rago.cameraxjetpackcompose.ui.camera.CameraScreen
+import com.rago.cameraxjetpackcompose.ui.home.HomeScreen
+import com.rago.cameraxjetpackcompose.ui.home.HomeViewModel
 import com.rago.cameraxjetpackcompose.ui.theme.CameraXJetpackComposeTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             CameraXJetpackComposeTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    MainScreen()
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
+private fun MainScreen() {
+    val navHostController = rememberNavController()
+    Scaffold(modifier = Modifier.fillMaxSize()) {
+        NavHost(navController = navHostController, startDestination = Routes.Home.route) {
+            composable(Routes.Home.route) {
+                val homeViewModel: HomeViewModel = hiltViewModel()
+                val homeUIState by homeViewModel.homeUIState.collectAsState()
+                LaunchedEffect(key1 = Unit, block = {
+                    homeUIState.setOnNavCamera {
+                        navHostController.navigate(Routes.Camera.route)
+                    }
+                })
+                HomeScreen(homeUIState = homeUIState)
+            }
+            composable(Routes.Camera.route) {
+                CameraScreen()
+            }
+        }
+    }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    CameraXJetpackComposeTheme {
-        Greeting("Android")
-    }
+sealed class Routes(val route: String) {
+    object Home : Routes("home")
+    object Camera : Routes("camera")
 }
