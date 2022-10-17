@@ -69,6 +69,8 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
     implementation "androidx.camera:camera-view:${camerax_version}"
 
+    implementation "io.coil-kt:coil-compose:2.1.0"
+
     // HILT -------------------------------------
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "androidx.hilt:hilt-compiler:$androidx_hilt"
