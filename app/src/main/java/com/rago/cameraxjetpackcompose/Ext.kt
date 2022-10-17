@@ -6,9 +6,9 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -24,19 +24,19 @@ suspend fun Context.getCameraProvider(): ProcessCameraProvider =
 val Context.executor: Executor
     get() = ContextCompat.getMainExecutor(this)
 
-suspend fun ImageCapture.takePicture(executor: Executor): File {
-    val photoFile = withContext(Dispatchers.IO) {
-        kotlin.runCatching {
-            File.createTempFile("image", "jpg")
-        }.getOrElse { ex ->
-            Log.e("TakePicture", "Failed to create temporary file", ex)
-            File("/dev/null")
-        }
+suspend fun ImageCapture.takePicture(context: Context): File {
+    val path = "${context.applicationInfo.dataDir}/images"
+    val directory = File(path)
+
+    if (!directory.exists()) {
+        directory.mkdir()
     }
+
+    val photoFile = createFile(directory, Constant.FILENAME)
 
     return suspendCoroutine { continuation ->
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-        takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
+        takePicture(outputOptions, context.executor, object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                 continuation.resume(photoFile)
             }
@@ -48,3 +48,9 @@ suspend fun ImageCapture.takePicture(executor: Executor): File {
         })
     }
 }
+
+fun createFile(baseFolder: File, format: String) =
+    File(
+        baseFolder, SimpleDateFormat(format, Locale.US)
+            .format(System.currentTimeMillis()) + Constant.PHOTO_EXTENSION
+    )

@@ -70,6 +70,10 @@ dependencies {
     implementation "androidx.camera:camera-view:${camerax_version}"
 
     implementation "io.coil-kt:coil-compose:2.1.0"
+    implementation "com.google.accompanist:accompanist-permissions:0.18.0"
+
+    // TODO PARA EJECUTAR EN ANDROID 33 se agrego esta dependency
+    implementation("androidx.work:work-runtime-ktx:$work_version")
 
     // HILT -------------------------------------
     implementation "com.google.dagger:hilt-android:$hilt_version"

@@ -11,21 +11,20 @@ import androidx.camera.core.Preview
 import androidx.camera.core.UseCase
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
-import com.rago.cameraxjetpackcompose.executor
+import coil.request.ImageRequest
 import com.rago.cameraxjetpackcompose.getCameraProvider
 import com.rago.cameraxjetpackcompose.takePicture
 import kotlinx.coroutines.launch
@@ -36,19 +35,51 @@ fun CameraScreen() {
     val emptyImageUri = Uri.parse("file://dev/null")
     var imageUri by remember { mutableStateOf(emptyImageUri) }
     if (imageUri != emptyImageUri) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        val model = ImageRequest.Builder(LocalContext.current)
+            .data(imageUri)
+            .size(coil.size.Size.ORIGINAL)
+            .crossfade(true)
+            .build()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
             Image(
                 modifier = Modifier.fillMaxSize(),
-                painter = rememberAsyncImagePainter(imageUri),
-                contentDescription = "Captured image"
+                painter = rememberAsyncImagePainter(
+                    model,
+                ),
+                contentDescription = "Captured image",
             )
-            Button(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                onClick = {
-                    imageUri = emptyImageUri
-                }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding(),
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
-                Text("Remove image")
+                Button(
+                    onClick = {
+                        imageUri = emptyImageUri
+                    }
+                ) {
+                    Text("Delete")
+                }
+                Button(
+                    onClick = {
+                        imageUri = emptyImageUri
+                    }
+                ) {
+                    Text("More")
+                }
+                Button(
+                    onClick = {
+                        imageUri = emptyImageUri
+                    }
+                ) {
+                    Text("Send")
+                }
             }
         }
     } else
@@ -126,7 +157,7 @@ fun CameraCapture(
                     .navigationBarsPadding(),
                 onClick = {
                     coroutineScope.launch {
-                        onImageFile(imageCaptureUseCase.takePicture(context.executor))
+                        onImageFile(imageCaptureUseCase.takePicture(context))
                     }
                 }
             ) {
