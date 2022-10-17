@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.rago.cameraxjetpackcompose.ui.camera.CameraScreen
+import com.rago.cameraxjetpackcompose.ui.camera.CameraViewModel
 import com.rago.cameraxjetpackcompose.ui.home.HomeScreen
 import com.rago.cameraxjetpackcompose.ui.home.HomeViewModel
 import com.rago.cameraxjetpackcompose.ui.theme.CameraXJetpackComposeTheme
@@ -59,7 +60,9 @@ private fun MainScreen() {
                 HomeScreen(homeUIState = homeUIState)
             }
             composable(Routes.Camera.route) {
-                CameraScreen()
+                val cameraViewModel: CameraViewModel = hiltViewModel()
+                val cameraUIState by cameraViewModel.cameraUIState.collectAsState()
+                CameraScreen(cameraUIState = cameraUIState)
             }
         }
     }

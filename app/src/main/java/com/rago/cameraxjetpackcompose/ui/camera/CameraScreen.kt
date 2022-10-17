@@ -1,6 +1,5 @@
 package com.rago.cameraxjetpackcompose.ui.camera
 
-import android.net.Uri
 import android.util.Log
 import android.util.Size
 import android.view.ViewGroup
@@ -10,13 +9,18 @@ import androidx.camera.core.ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCase
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -31,63 +35,73 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
-fun CameraScreen() {
-    val emptyImageUri = Uri.parse("file://dev/null")
-    var imageUri by remember { mutableStateOf(emptyImageUri) }
-    if (imageUri != emptyImageUri) {
-        val model = ImageRequest.Builder(LocalContext.current)
-            .data(imageUri)
-            .size(coil.size.Size.ORIGINAL)
-            .crossfade(true)
-            .build()
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        ) {
-            Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = rememberAsyncImagePainter(
-                    model,
-                ),
-                contentDescription = "Captured image",
-            )
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding(),
-                horizontalArrangement = Arrangement.SpaceAround
+fun CameraScreen(cameraUIState: CameraUIState) {
+
+    LaunchedEffect(key1 = cameraUIState.gallery.size, block = {
+        Log.i("CameraScreen", "CameraScreen: ${cameraUIState.gallery.size}")
+    })
+
+    if (cameraUIState.loading) {
+        AlertDialog(onDismissRequest = {}, text = {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }, confirmButton = {})
+    }
+
+    Crossfade(targetState = cameraUIState.file) { file ->
+        if (file != null) {
+            val model = ImageRequest.Builder(LocalContext.current)
+                .data(file.toUri())
+                .size(coil.size.Size.ORIGINAL)
+                .crossfade(true)
+                .build()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
             ) {
-                Button(
-                    onClick = {
-                        imageUri = emptyImageUri
-                    }
+                Image(
+                    modifier = Modifier.fillMaxSize(),
+                    painter = rememberAsyncImagePainter(
+                        model,
+                    ),
+                    contentDescription = "Captured image",
+                )
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding(),
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    Text("Delete")
-                }
-                Button(
-                    onClick = {
-                        imageUri = emptyImageUri
+                    Button(
+                        onClick = cameraUIState.deleteFile
+                    ) {
+                        Text("Delete")
                     }
-                ) {
-                    Text("More")
-                }
-                Button(
-                    onClick = {
-                        imageUri = emptyImageUri
+                    Button(
+                        onClick = cameraUIState.moreFile
+                    ) {
+                        Text("More")
                     }
-                ) {
-                    Text("Send")
+                    Button(
+                        onClick = {
+//                            imageUri = emptyImageUri
+                        }
+                    ) {
+                        Text("Send")
+                    }
                 }
             }
         }
-    } else
-        CameraCapture(
-            onImageFile = { file ->
-                imageUri = file.toUri()
-            }
-        )
+
+        if (file == null) {
+            CameraCapture(
+                cameraUIState = cameraUIState
+            )
+        }
+    }
 }
 
 @Composable
@@ -126,7 +140,7 @@ private fun CameraPreview(
 @Composable
 fun CameraCapture(
     cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
-    onImageFile: (File) -> Unit = { }
+    cameraUIState: CameraUIState
 ) {
     Scaffold(Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -149,19 +163,26 @@ fun CameraCapture(
                     previewUseCase = it
                 }
             )
-            Button(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .padding(16.dp)
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color.Gray.copy(alpha = 0.3f))
                     .align(Alignment.BottomCenter)
-                    .navigationBarsPadding(),
-                onClick = {
-                    coroutineScope.launch {
-                        onImageFile(imageCaptureUseCase.takePicture(context))
-                    }
-                }
+                    .navigationBarsPadding()
             ) {
-                Text("Click!")
+                GalleryPreview(cameraUIState = cameraUIState)
+                Button(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(16.dp),
+                    onClick = {
+                        coroutineScope.launch {
+                            cameraUIState.newFile(imageCaptureUseCase.takePicture(context))
+                        }
+                    }
+                ) {
+                    Text("Click!")
+                }
             }
 
             LaunchedEffect(previewUseCase) {
@@ -175,6 +196,24 @@ fun CameraCapture(
                 } catch (ex: Exception) {
                     Log.e("CameraCapture", "Failed to bind camera use cases", ex)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GalleryPreview(cameraUIState: CameraUIState) {
+    LazyRow {
+        items(cameraUIState.gallery) { file ->
+            Box(modifier = Modifier.padding(horizontal = 10.dp)) {
+                Image(
+                    painter = rememberAsyncImagePainter(model = file.toUri()),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(10.dp)),
+
+                    )
             }
         }
     }
