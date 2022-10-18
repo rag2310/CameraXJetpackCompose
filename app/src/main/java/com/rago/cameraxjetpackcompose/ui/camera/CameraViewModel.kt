@@ -1,5 +1,9 @@
 package com.rago.cameraxjetpackcompose.ui.camera
 
+import android.util.Size
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,9 +20,18 @@ class CameraViewModel @Inject constructor() : ViewModel() {
 
     private val _cameraUIState: MutableStateFlow<CameraUIState> = MutableStateFlow(
         CameraUIState(
+            imageCaptureUseCase = ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                .setTargetResolution(Size(720, 720))
+                .build(),
+            previewUseCase = Preview.Builder().build(),
+            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
             deleteFile = ::deleteFile,
             newFile = ::newFile,
-            moreFile = ::moreFile
+            moreFile = ::moreFile,
+            onChangeFlash = ::onChangeFlash,
+            onChangeCameraSelector = ::onChangeCameraSelect,
+            setCameraSelect = ::setCameraSelect
         )
     )
 
@@ -60,6 +73,38 @@ class CameraViewModel @Inject constructor() : ViewModel() {
             newGallery.addAll(gallery)
             _cameraUIState.update {
                 it.copy(gallery = newGallery, file = null)
+            }
+        }
+    }
+
+    private fun onChangeFlash() {
+        viewModelScope.launch {
+            val flash = _cameraUIState.value.flash
+            _cameraUIState.update {
+                it.copy(flash = !flash)
+            }
+        }
+    }
+
+    private fun setCameraSelect(cameraSelector: CameraSelector) {
+        viewModelScope.launch {
+            _cameraUIState.update {
+                it.copy(cameraSelector = cameraSelector)
+            }
+        }
+    }
+
+    private fun onChangeCameraSelect() {
+        viewModelScope.launch {
+
+            if (_cameraUIState.value.cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+                _cameraUIState.update {
+                    it.copy(cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA)
+                }
+            } else {
+                _cameraUIState.update {
+                    it.copy(cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA)
+                }
             }
         }
     }
