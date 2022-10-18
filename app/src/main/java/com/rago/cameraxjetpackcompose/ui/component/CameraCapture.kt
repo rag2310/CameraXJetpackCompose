@@ -11,9 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FlashOff
-import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material.icons.filled.FlipCameraIos
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.sharp.Lens
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -70,7 +68,7 @@ fun CameraCapture(
 
             LaunchedEffect(cameraUIState.previewUseCase) {
                 if (!firstTime) {
-                    closeCamera(context)
+//                    closeCamera(context)
                     startCamera(cameraUIState, context, lifecycleOwner)
                 }
                 if (firstTime) {
@@ -81,7 +79,7 @@ fun CameraCapture(
 
             LaunchedEffect(key1 = cameraUIState.cameraSelector, block = {
                 if (!firstTime) {
-                    closeCamera(context)
+//                    closeCamera(context)
                     startCamera(cameraUIState, context, lifecycleOwner)
                 }
             })
@@ -94,6 +92,30 @@ fun CameraCapture(
                     cameraUIState.previewUseCase = it
                 }
             )
+            Box(modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(start = 15.dp, top = 5.dp)) {
+                Box(
+                    modifier = Modifier
+                        .clip(
+                            CircleShape
+                        )
+                        .background(Color.DarkGray.copy(alpha = 0.3f))
+                        .clickable(onClick = cameraUIState.onNavBack),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(modifier = Modifier.padding(5.dp)) {
+                        Icon(
+                            Icons.Filled.Close,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(32.dp),
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
             PanelCameraControls(
                 cameraUIState = cameraUIState,
                 heightAllBoxActions = heightAllBoxActions,
@@ -139,7 +161,7 @@ private fun BoxScope.PanelCameraControls(
 }
 
 @Composable
-private fun BackgroundPanelCameraControls(
+fun BackgroundPanelCameraControls(
     heightHalfBoxActions: MutableState<Dp> = mutableStateOf(0.dp)
 ) {
     val density = LocalDensity.current
@@ -335,9 +357,4 @@ private suspend fun startCamera(
     } catch (ex: Exception) {
         Log.e("CameraCapture", "Failed to bind camera use cases", ex)
     }
-}
-
-private suspend fun closeCamera(context: Context) {
-    val cameraProvider = context.getCameraProvider()
-    cameraProvider.shutdown()
 }

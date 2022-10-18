@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import java.io.File
 import java.util.concurrent.Executor
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -27,4 +28,11 @@ class Utils @Inject constructor(
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+
+    private fun getPath() = "${context.applicationInfo.dataDir}/images"
+
+    fun getFiles(): List<File> {
+        val directory = File(getPath())
+        return directory.listFiles()?.toList() ?: listOf()
+    }
 }

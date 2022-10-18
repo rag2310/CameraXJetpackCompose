@@ -1,6 +1,7 @@
 package com.rago.cameraxjetpackcompose
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import com.rago.cameraxjetpackcompose.ui.home.HomeScreen
 import com.rago.cameraxjetpackcompose.ui.home.HomeViewModel
 import com.rago.cameraxjetpackcompose.ui.theme.CameraXJetpackComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -57,11 +59,27 @@ private fun MainScreen() {
                         navHostController.navigate(Routes.Camera.route)
                     }
                 })
+                val secondScreenResult = navHostController.currentBackStackEntry
+                    ?.savedStateHandle
+                    ?.getStateFlow("gallery", listOf<File>())?.collectAsState()
+                LaunchedEffect(key1 = Unit, block = {
+                    secondScreenResult?.let {
+                        homeUIState.setGallery(it.value)
+                    }
+                })
                 HomeScreen(homeUIState = homeUIState)
             }
             composable(Routes.Camera.route) {
                 val cameraViewModel: CameraViewModel = hiltViewModel()
                 val cameraUIState by cameraViewModel.cameraUIState.collectAsState()
+                LaunchedEffect(key1 = Unit, block = {
+                    cameraUIState.onChangeNavBack {
+                        navHostController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("gallery", it)
+                        navHostController.popBackStack()
+                    }
+                })
                 CameraScreen(cameraUIState = cameraUIState)
             }
         }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,10 +21,19 @@ class HomeViewModel @Inject constructor(
     private val _homeUIState: MutableStateFlow<HomeUIState> = MutableStateFlow(
         HomeUIState(
             setOnNavCamera = ::setOnNavCamera,
-            handleButton = ::handleButton
+            handleButton = ::handleButton,
+            setGallery = ::setGallery
         )
     )
     val homeUIState: StateFlow<HomeUIState> = _homeUIState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _homeUIState.update {
+                it.copy(gallery = utils.getFiles())
+            }
+        }
+    }
 
     private fun setOnNavCamera(onNavCamera: () -> Unit) {
         viewModelScope.launch {
@@ -45,6 +55,18 @@ class HomeViewModel @Inject constructor(
                 else -> {
                     _homeUIState.value.onNavCamera()
                 }
+            }
+        }
+    }
+
+    private fun setGallery(list: List<File>) {
+        viewModelScope.launch {
+            val oldGallery = _homeUIState.value.gallery
+            val newGallery = mutableListOf<File>()
+            newGallery.addAll(oldGallery)
+            newGallery.addAll(list)
+            _homeUIState.update {
+                it.copy(gallery = newGallery)
             }
         }
     }

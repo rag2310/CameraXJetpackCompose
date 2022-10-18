@@ -3,6 +3,7 @@ package com.rago.cameraxjetpackcompose.ui.camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.UseCase
+import androidx.navigation.NavHostController
 import java.io.File
 
 data class CameraUIState(
@@ -18,5 +19,9 @@ data class CameraUIState(
     val onChangeCameraSelector: () -> Unit = {},
     val setCameraSelect: (CameraSelector) -> Unit = {},
     val imageCaptureUseCase: ImageCapture? = null,
-    var previewUseCase: UseCase? = null
+    var previewUseCase: UseCase? = null,
+    var onNavBack: () -> Unit = {},
+    var onChangeNavBack: ((gallery: List<File>) -> Unit) -> Unit = {},
+    val sendImages: () -> Unit = {},
+    val navBack: Boolean = false
 )

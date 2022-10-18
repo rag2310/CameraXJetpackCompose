@@ -22,8 +22,7 @@ class CameraViewModel @Inject constructor() : ViewModel() {
         CameraUIState(
             imageCaptureUseCase = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                .setTargetResolution(Size(720, 720))
-                .build(),
+                .setTargetResolution(Size(720, 720)).build(),
             previewUseCase = Preview.Builder().build(),
             cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA,
             deleteFile = ::deleteFile,
@@ -31,7 +30,9 @@ class CameraViewModel @Inject constructor() : ViewModel() {
             moreFile = ::moreFile,
             onChangeFlash = ::onChangeFlash,
             onChangeCameraSelector = ::onChangeCameraSelect,
-            setCameraSelect = ::setCameraSelect
+            setCameraSelect = ::setCameraSelect,
+            onChangeNavBack = ::onChangeNavBack,
+            sendImages = ::sendImages
         )
     )
 
@@ -105,6 +106,31 @@ class CameraViewModel @Inject constructor() : ViewModel() {
                 _cameraUIState.update {
                     it.copy(cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA)
                 }
+            }
+        }
+    }
+
+    private fun onChangeNavBack(func: (List<File>) -> Unit) {
+        viewModelScope.launch {
+            _cameraUIState.update {
+                it.copy(onNavBack = {
+                    func(_cameraUIState.value.gallery)
+                })
+            }
+        }
+    }
+
+    private fun sendImages() {
+        viewModelScope.launch {
+            val gallery = _cameraUIState.value.gallery
+            val file = _cameraUIState.value.file
+            val newGallery = mutableListOf<File>()
+            file?.let {
+                newGallery.add(it)
+            }
+            newGallery.addAll(gallery)
+            _cameraUIState.update {
+                it.copy(gallery = newGallery, navBack = true)
             }
         }
     }
