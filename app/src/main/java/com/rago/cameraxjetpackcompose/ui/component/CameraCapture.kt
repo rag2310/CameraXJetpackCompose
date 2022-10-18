@@ -92,6 +92,7 @@ fun CameraCapture(
                     cameraUIState.previewUseCase = it
                 }
             )
+
             Box(modifier = Modifier
                 .align(Alignment.TopStart)
                 .statusBarsPadding()
