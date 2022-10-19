@@ -1,9 +1,6 @@
 package com.rago.cameraxjetpackcompose.ui.camera
 
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.UseCase
-import androidx.navigation.NavHostController
+import androidx.camera.core.*
 import java.io.File
 
 data class CameraUIState(
@@ -23,5 +20,7 @@ data class CameraUIState(
     var onNavBack: () -> Unit = {},
     var onChangeNavBack: ((gallery: List<File>) -> Unit) -> Unit = {},
     val sendImages: () -> Unit = {},
-    val navBack: Boolean = false
+    val navBack: Boolean = false,
+    val camera: Camera? = null,
+    val onChangeCamera: (Camera) -> Unit = {}
 )

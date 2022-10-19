@@ -68,7 +68,6 @@ fun CameraCapture(
 
             LaunchedEffect(cameraUIState.previewUseCase) {
                 if (!firstTime) {
-//                    closeCamera(context)
                     startCamera(cameraUIState, context, lifecycleOwner)
                 }
                 if (firstTime) {
@@ -79,8 +78,15 @@ fun CameraCapture(
 
             LaunchedEffect(key1 = cameraUIState.cameraSelector, block = {
                 if (!firstTime) {
-//                    closeCamera(context)
                     startCamera(cameraUIState, context, lifecycleOwner)
+                }
+            })
+
+            LaunchedEffect(key1 = cameraUIState.flash, block = {
+                cameraUIState.camera?.let {
+                    if (it.cameraInfo.hasFlashUnit()) {
+                        it.cameraControl.enableTorch(cameraUIState.flash)
+                    }
                 }
             })
 
@@ -93,10 +99,12 @@ fun CameraCapture(
                 }
             )
 
-            Box(modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-                .padding(start = 15.dp, top = 5.dp)) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .statusBarsPadding()
+                    .padding(start = 15.dp, top = 5.dp)
+            ) {
                 Box(
                     modifier = Modifier
                         .clip(
@@ -349,12 +357,14 @@ private suspend fun startCamera(
 
         cameraUIState.setCameraSelect(cameraSelectorValidated)
 
-        cameraProvider.bindToLifecycle(
+        val camera = cameraProvider.bindToLifecycle(
             lifecycleOwner,
             cameraSelectorValidated,
             cameraUIState.previewUseCase,
             cameraUIState.imageCaptureUseCase
         )
+
+        cameraUIState.onChangeCamera(camera)
     } catch (ex: Exception) {
         Log.e("CameraCapture", "Failed to bind camera use cases", ex)
     }

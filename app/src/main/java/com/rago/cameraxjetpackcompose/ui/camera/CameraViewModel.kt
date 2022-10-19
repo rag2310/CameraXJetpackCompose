@@ -1,6 +1,8 @@
 package com.rago.cameraxjetpackcompose.ui.camera
 
 import android.util.Size
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraProvider
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
@@ -32,7 +34,8 @@ class CameraViewModel @Inject constructor() : ViewModel() {
             onChangeCameraSelector = ::onChangeCameraSelect,
             setCameraSelect = ::setCameraSelect,
             onChangeNavBack = ::onChangeNavBack,
-            sendImages = ::sendImages
+            sendImages = ::sendImages,
+            onChangeCamera = ::onChangeCamera
         )
     )
 
@@ -131,6 +134,14 @@ class CameraViewModel @Inject constructor() : ViewModel() {
             newGallery.addAll(gallery)
             _cameraUIState.update {
                 it.copy(gallery = newGallery, navBack = true)
+            }
+        }
+    }
+
+    private fun onChangeCamera(camera: Camera) {
+        viewModelScope.launch {
+            _cameraUIState.update {
+                it.copy(camera = camera)
             }
         }
     }
